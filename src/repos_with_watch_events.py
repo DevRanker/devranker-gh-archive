@@ -91,7 +91,8 @@ def get_repository_details(repo_id):
 	}
 	return repository_details
 
-def get_repository_star_counts(watch_records):
+def get_repository_star_counts(watch_data_file):
+	watch_records = load_json_records(watch_data_file)
 	max_time = dt.min
 	starred_counts = {}
 	actor_starred = {}
@@ -175,8 +176,7 @@ if __name__ == '__main__':
 
 	# import sys
 	# watch_data_file = sys.argv[1] #'../data/watch_event_data/hourly/watch_2024-04-23-2.json'
-	# watch_records = load_json_records(watch_data_file)
-	# trending_repos = get_repository_star_counts(watch_records)
+	# trending_repos = get_repository_star_counts(watch_data_file)
 	# from pprint import pprint
 	# pprint(trending_repos)
 	# store_json_records(trending_repos, f'../output/trending_repos_{date}.json')
