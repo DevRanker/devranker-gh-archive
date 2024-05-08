@@ -32,16 +32,16 @@ def request_github_api(path, follow_links = False, extract_records=None):
 	else:
 		raise Exception("API Request {} failed, returned status_code {}. Message: {}".format(path, request.status_code, request.text))
 
-def load_raw_gharchive_records(data_file):
+def load_json_line_records(data_file):
 	with open(data_file) as input_file:
 		records = input_file.read().strip().split('\n')
-	return records
+		json_records = [json.loads(record) for record in records]
+	return json_records
 
 def filter_records_and_store(event_type ,data_file, dest_file):
-	records = load_raw_gharchive_records(data_file)
-	json_records = [json.loads(record) for record in records]
-	print(f"Records Found: {len(json_records)}")
-	watch_records = [record for record in json_records if record['type'] == event_type]
+	records = load_json_line_records(data_file)
+	print(f"Records Found: {len(records)}")
+	watch_records = [record for record in records if record['type'] == event_type]
 	print(f"`{event_type}` Found: {len(watch_records)}")
 	store_json_records(watch_records, dest_file)
 
@@ -155,10 +155,13 @@ def get_repository_star_counts(watch_data_file):
 	}
 	return trending_results
 
-def combine_json_records(data_files, dest_file):
+def combine_json_records(data_files, dest_file, json_lines=False):
 	combined_records = []
 	for file in data_files:
-		combined_records.extend(load_json_records(file))
+		if json_lines:
+			combined_records.extend(load_json_line_records(file))
+		else:
+			combined_records.extend(load_json_records(file))
 	store_json_records(combined_records, dest_file)
 
 if __name__ == '__main__':
