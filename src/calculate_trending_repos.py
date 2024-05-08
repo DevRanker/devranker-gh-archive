@@ -18,22 +18,21 @@ def download_file_and_filter_events(file_hour, dest_file, event_type='WatchEvent
 		print(f"Error Downloading the file for: {file_hour}")
 		sys.exit(1)
 	filtered_events_directory = dest_file.rsplit('/',1)[0]
-	Path(filtered_events_directory).mkdir(parents=True, exist_ok=True) 
+	Path(filtered_events_directory).mkdir(parents=True, exist_ok=True)
 	print(f'Filtering {event_type} Records for : {file_hour}')
 	filter_records_and_store(event_type, hourly_file_path, dest_file)
 	Path.unlink(hourly_file_path)
 
 if __name__ == '__main__':
 	latest_gh_file_date = get_latest_gh_file_date()
-	print(f"Latest File Date: {latest_gh_file_date}")	
+	print(f"Latest File Date: {latest_gh_file_date}")
 	latest_hourly_files = []
 	for i in range (24):
 		gh_file = latest_gh_file_date - timedelta(hours=i)
 		file_date = gh_file.date()
 		file_hour = gh_file.hour
 		watch_event_file = f'../data/watch_event_data/hourly/{file_date}/watch_{file_date}-{file_hour}.json'
-		if not Path(watch_event_file).is_file():			
-			# download_file_and_filter_events(file_hour, watch_event_file)
+		if not Path(watch_event_file).is_file():
 			download_status = subprocess.call(['sh', './download_and_filter_watch_events.sh', f'{file_date}', f'{file_hour}'])
 		latest_hourly_files.append(watch_event_file)
 	print(f'Combining lastest 24-Hours Records')
@@ -46,3 +45,4 @@ if __name__ == '__main__':
 	trending_repos_directory = f'../output/trending_repos/{latest_gh_file_date.date()}'
 	Path(trending_repos_directory).mkdir(parents=True, exist_ok=True)
 	store_json_records(trending_repos, f'{trending_repos_directory}/trending_repos_{latest_gh_file_date.date()}-{latest_gh_file_date.hour}.json')
+	store_json_records(trending_repos, f'../output/trending_repos/trending_repos_latest.json')
