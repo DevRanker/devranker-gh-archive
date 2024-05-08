@@ -119,11 +119,15 @@ def get_repository_star_counts(watch_data_file):
 	top_repos_list = []
 	top_repo_ids = []
 	for repo_id, repo_star_count in sorted(starred_counts.items(), key=lambda item: item[1]['new_stars'], reverse=True):
-		count += 1
 		repo_star_count['rank'] = count
+		try:
+			repo_star_count['repository_details'] = get_repository_details(repo_star_count['repo_id'])
+		except Exception:
+			continue
 		top_repos_list.append(repo_star_count)
 		top_repo_ids.append(repo_id)
 		# print(f"https://github.com/{repo_star_count['repo_full_name']}, {repo_star_count['new_stars']}")
+		count += 1
 		if count == 30:
 			break
 
@@ -134,10 +138,15 @@ def get_repository_star_counts(watch_data_file):
 		top_also_starred = sorted([[x,also_starred_repos.count(x)] for x in set(also_starred_repos) if x not in top_repo_ids], key=lambda item: item[1], reverse=True)[:6]
 		top_repo['also_starred'] = [[star_counts,starred_counts[repo].copy()] for repo,star_counts in top_also_starred ]
 		del top_repo['starring_actors']
-		top_repo['repository_details'] = get_repository_details(top_repo['repo_id'])
-		for also_starred_repo in top_repo['also_starred']:
-			del also_starred_repo[1]['starring_actors']
-			also_starred_repo[1]['repository_details'] = get_repository_details(also_starred_repo[1]['repo_id'])
+		stale_repo_indices = []
+		for index in range(len(top_repo['also_starred'])):
+			del top_repo['also_starred'][index][1]['starring_actors']
+			try:
+				top_repo['also_starred'][index][1]['repository_details'] = get_repository_details(top_repo['also_starred'][index][1]['repo_id'])
+			except Exception:
+				stale_repo_indices.insert(0,index)
+		for index in stale_repo_indices:
+			top_repo['also_starred'].pop(index)
 
 	trending_results = {
 		"total_stars": len(watch_records),
