@@ -3,7 +3,14 @@ from repos_with_watch_events import filter_records_and_store, combine_json_recor
 from datetime import timedelta
 from pathlib import Path
 import sys
+import subprocess
 
+"""
+	Function to download a file, uncompress it, filter events and write the result to a json file.
+	The function was later replaced by a shell script:
+		- Reading the uncompressed file after writing it, was killing the process due to memory limits
+		- just file.read() operation was taking 6-8x the file size in RAM
+"""
 def download_file_and_filter_events(file_hour, dest_file, event_type='WatchEvent'):
 	print(f"Downloading File for: {file_hour}")
 	hourly_file_path = download_gh_file_from_date(file_hour)
@@ -21,14 +28,17 @@ if __name__ == '__main__':
 	print(f"Latest File Date: {latest_gh_file_date}")	
 	latest_hourly_files = []
 	for i in range (24):
-		file_hour = latest_gh_file_date - timedelta(hours=i)
-		watch_event_file = f'../data/watch_event_data/hourly/{file_hour.date()}/watch_{file_hour.date()}-{file_hour.hour}.json'
-		if not Path(watch_event_file).is_file():
-			download_file_and_filter_events(file_hour, watch_event_file)
+		gh_file = latest_gh_file_date - timedelta(hours=i)
+		file_date = gh_file.date()
+		file_hour = gh_file.hour
+		watch_event_file = f'../data/watch_event_data/hourly/{file_date}/watch_{file_date}-{file_hour}.json'
+		if not Path(watch_event_file).is_file():			
+			# download_file_and_filter_events(file_hour, watch_event_file)
+			download_status = subprocess.call(['sh', './download_and_filter_watch_events.sh', f'{file_date}', f'{file_hour}'])
 		latest_hourly_files.append(watch_event_file)
 	print(f'Combining lastest 24-Hours Records')
 	latest_24_hour_watch_events_file = f'../data/watch_event_data/trending_repos/watch_{latest_gh_file_date.date()}-{latest_gh_file_date.hour}.json'
-	combine_json_records(latest_hourly_files, latest_24_hour_watch_events_file)
+	combine_json_records(latest_hourly_files, latest_24_hour_watch_events_file, json_lines=True)
 	print(f'Generating Trending Repos Report')
 	trending_repos = get_repository_star_counts(latest_24_hour_watch_events_file)
 	store_json_records(trending_repos, f'../output/trending_repos_{latest_gh_file_date.date()}-{latest_gh_file_date.hour}.json')
