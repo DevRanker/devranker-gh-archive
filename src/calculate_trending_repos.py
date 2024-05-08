@@ -4,6 +4,18 @@ from datetime import timedelta
 from pathlib import Path
 import sys
 
+def download_file_and_filter_events(file_hour, dest_file, event_type='WatchEvent'):
+	print(f"Downloading File for: {file_hour}")
+	hourly_file_path = download_gh_file_from_date(file_hour)
+	if not hourly_file_path:
+		print(f"Error Downloading the file for: {file_hour}")
+		sys.exit(1)
+	filtered_events_directory = dest_file.rsplit('/',1)[0]
+	Path(filtered_events_directory).mkdir(parents=True, exist_ok=True) 
+	print(f'Filtering {event_type} Records for : {file_hour}')
+	filter_records_and_store(event_type, hourly_file_path, dest_file)
+	Path.unlink(hourly_file_path)
+
 if __name__ == '__main__':
 	latest_gh_file_date = get_latest_gh_file_date()
 	print(f"Latest File Date: {latest_gh_file_date}")	
@@ -12,17 +24,7 @@ if __name__ == '__main__':
 		file_hour = latest_gh_file_date - timedelta(hours=i)
 		watch_event_file = f'../data/watch_event_data/hourly/{file_hour.date()}/watch_{file_hour.date()}-{file_hour.hour}.json'
 		if not Path(watch_event_file).is_file():
-			print(f"Downloading File for: {file_hour}")
-			hourly_file_path = download_gh_file_from_date(file_hour)
-			if not hourly_file_path:
-				print(f"Error Downloading the file for: {file_hour}")
-				sys.exit(1)
-			watch_events_directory = watch_event_file.rsplit('/',1)[0]
-			Path(watch_events_directory).mkdir(parents=True, exist_ok=True) 
-			event_type = 'WatchEvent'
-			print(f'Filtering {event_type} Records for : {file_hour}')
-			filter_records_and_store(event_type, hourly_file_path, watch_event_file)
-			Path.unlink(hourly_file_path)
+			download_file_and_filter_events(file_hour, watch_event_file)
 		latest_hourly_files.append(watch_event_file)
 	print(f'Combining lastest 24-Hours Records')
 	latest_24_hour_watch_events_file = f'../data/watch_event_data/trending_repos/watch_{latest_gh_file_date.date()}-{latest_gh_file_date.hour}.json'
