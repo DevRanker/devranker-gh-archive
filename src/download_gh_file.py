@@ -6,6 +6,7 @@ from pathlib import Path
 
 def download_file_from_url(url, target):
 	response = requests.get(url)
+	Path(target.rsplit('/',1)[0]).mkdir(parents=True, exist_ok=True) 
 	if response.ok and response.status_code == 200:
 		with open(target, 'wb') as output_file:
 			output_file.write(response.content)
