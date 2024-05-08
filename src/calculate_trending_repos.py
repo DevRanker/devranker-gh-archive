@@ -37,8 +37,12 @@ if __name__ == '__main__':
 			download_status = subprocess.call(['sh', './download_and_filter_watch_events.sh', f'{file_date}', f'{file_hour}'])
 		latest_hourly_files.append(watch_event_file)
 	print(f'Combining lastest 24-Hours Records')
-	latest_24_hour_watch_events_file = f'../data/watch_event_data/trending_repos/watch_{latest_gh_file_date.date()}-{latest_gh_file_date.hour}.json'
+	trailing_24_hours_directory = '../data/watch_event_data/trailing_24_hours'
+	Path(trailing_24_hours_directory).mkdir(parents=True, exist_ok=True)
+	latest_24_hour_watch_events_file = f'{trailing_24_hours_directory}/watch_{latest_gh_file_date.date()}-{latest_gh_file_date.hour}.json'
 	combine_json_records(latest_hourly_files, latest_24_hour_watch_events_file, json_lines=True)
 	print(f'Generating Trending Repos Report')
 	trending_repos = get_repository_star_counts(latest_24_hour_watch_events_file)
-	store_json_records(trending_repos, f'../output/trending_repos_{latest_gh_file_date.date()}-{latest_gh_file_date.hour}.json')
+	trending_repos_directory = f'../output/trending_repos/{latest_gh_file_date.date()}'
+	Path(trending_repos_directory).mkdir(parents=True, exist_ok=True)
+	store_json_records(trending_repos, f'{trending_repos_directory}/trending_repos_{latest_gh_file_date.date()}-{latest_gh_file_date.hour}.json')
