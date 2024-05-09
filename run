@@ -4,4 +4,4 @@ docker run --rm \
 	-v $(pwd)/data:/usr/src/app/data \
 	-v $(pwd)/output:/usr/src/app/output \
 	-v $(pwd)/src/.env:/usr/src/app/src/.env \
-	python:devranker
+	python312:devranker-gh
